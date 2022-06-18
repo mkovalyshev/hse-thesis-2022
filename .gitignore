@@ -1,2 +1,5 @@
 src/bustime/dev.ipynb
 **/.ipynb_checkpoints
+**/config.yaml
+.gitignore
+**/__pycache__/**
