@@ -17,6 +17,7 @@ class City:
     @staticmethod
     def get_cities(schema: str = "https", host: str = "busti.me") -> tuple[object]:
         """
+        # TODO: rename so method becomes more interface like (remote/local)
         returns tuple of City objects
         """
 
