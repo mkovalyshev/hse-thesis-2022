@@ -27,10 +27,7 @@ class City:
             "a", {"class": "item"}
         )
 
-        cities = []
-
-        for item in items:
-            cities.append(City(item.text, item.get("href").strip("/")))
+        cities = [City(item.text, item.get("href").strip("/")) for item in items]
 
         return cities
 
