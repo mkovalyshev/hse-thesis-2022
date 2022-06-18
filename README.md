@@ -1,7 +1,7 @@
 # Influence of parking pricing on effective accessibility of urban sub-centres 🌃
 
-[![Python](https://img.shields.io/badge/Python-3.9.12-green.svg)](https://www.python.org/)
-[![Conda](https://img.shields.io/badge/Conda-4.10.3-green.svg)](https://docs.conda.io/en/latest/)
+[![Python](https://img.shields.io/badge/python-3.9.12-green.svg)](https://www.python.org/)
+[![Conda](https://img.shields.io/badge/conda-4.10.3-green.svg)](https://docs.conda.io/en/latest/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## Acknowledgement
