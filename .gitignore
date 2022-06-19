@@ -3,3 +3,4 @@ src/bustime/dev.ipynb
 **/config.yaml
 .gitignore
 **/__pycache__/**
+**/dev.ipynb

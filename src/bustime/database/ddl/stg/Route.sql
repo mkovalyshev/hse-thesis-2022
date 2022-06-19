@@ -1,4 +1,4 @@
-CREATE TABLE schema.stg_routes (
+CREATE TABLE {schema}.stg_routes (
     "route_id"  int8
   , "name"      varchar(64)
   , "type"      varchar(255)

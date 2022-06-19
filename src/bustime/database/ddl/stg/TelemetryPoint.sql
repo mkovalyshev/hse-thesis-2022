@@ -1,4 +1,4 @@
-CREATE TABLE schema.stg_telemetry_points (
+CREATE TABLE {schema}.stg_telemetry_points (
     "track_id"     varchar(255)
   , "route"        json
   , "vehicle_id"   varchar(255)
