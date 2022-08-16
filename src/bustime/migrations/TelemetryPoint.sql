@@ -1,4 +1,4 @@
-CREATE TABLE {schema}.stg_telemetry_points (
+create table if not exists {{ schema }}.stg_telemetry_points (
     "track_id"     varchar(255)
   , "route"        json
   , "vehicle_id"   varchar(255)
@@ -10,5 +10,6 @@ CREATE TABLE {schema}.stg_telemetry_points (
   , "lon"          float
   , "lat"          float
   , "timestamp"    timestamp
+  , "_updated_at"  timestamp default current_timestamp not null
 )
-PARTITION BY RANGE ("timestamp");
+partition by range ("timestamp");

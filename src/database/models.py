@@ -1,60 +1,115 @@
-import yaml
 import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-
-with open("config.yaml") as file:
-    CONFIG = yaml.load(file, Loader=yaml.SafeLoader)
-
-with open("sql/create.sql", "r") as file:
-    CREATE_STATEMENT = file.read()
-
-with open("sql/grant_privileges.sql", "r") as file:
-    GRANT_PRIVILEGES_STATEMENT = file.read()
+from typing import Iterable
+from jinja2 import Template
 
 
-class Database:
+def get_template(path: str) -> Template:
+    pass
+
+
+class Column:
+    """
+    class for PostgreSQL column
+    """
+
+    def __init__(
+        self, name: str, type: str,
+    ):
+        self.name = name
+        self.type = type
+
+    def __repr__(self) -> str:
+        return "Column {name}({type})".format(name=self.name, type=self.type)
+
+
+class Table:
+    """
+    class for PostgreSQL table
+    """
+
     def __init__(
         self,
-        provider: str,
-        host: str,
-        username: str,
-        password: str,
-        database: str,
-        *args,
-        **kwargs
-    ) -> None:
-        self.__provider = provider
-        self.__host = host
-        self.__username = username
-        self.__password = password
-        self.__database = database
+        schema: str,
+        name: str,
+        columns: Iterable[Column],
+        partition_by: Iterable[Column],
+    ):
+        self.schema = schema
+        self.name = name
+        self.columns = columns
+        self.partition_by = partition_by
 
-    def __get_credentials(self) -> dict:
+    def __repr__(self) -> str:
+        return "Table {schema}.{name}".format(schema=self.schema, name=self.name)
+
+
+class PostgreSQL:
+    """
+    class for handling PostgreSQL operations
+    """
+
+    def __init__(
+        self, host: str, port: int, user: str, password: str, database: str = None,
+    ):
+        self.host = host
+        self.port = port
+        self.user = user
+        self.password = password
+        self.database = database
+
+    def __repr__(self):
+        return "PostgreSQL({host}:{port}/{database}); user={user}; password=***".format(
+            host=self.host, port=self.port, database=self.database, user=self.user
+        )
+
+    def _connect(self) -> object:
         """
-        returns psycopg2 compliant credentials for kwargs unpacking
+        returns psycopg2 connection
         """
 
-        return {
-            "dbname": self.__provider,
-            "user": self.__username,
-            "host": self.__host,
-            "password": self.__password,
-        }
+        connection = psycopg2.connect(
+            host=self.host,
+            port=self.port,
+            user=self.user,
+            password=self.password,
+            database=self.database,
+        )
 
-    def create_database(
-        self, database: str = CONFIG["database"], owner: str = CONFIG["username"]
-    ) -> None:
+        return connection
+
+    def execute(self, query: str, commit: bool = False) -> None:
         """
-        created database with owner
+        executes query
         """
 
-        with psycopg2.connect(**self.__get_credentials()) as connection:
-            connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+        with self._connect() as connection:
             cursor = connection.cursor()
-            cursor.execute(CREATE_STATEMENT.format(owner=owner, database=database))
-            connection.commit()
-            cursor.execute(
-                GRANT_PRIVILEGES_STATEMENT.format(owner=owner, database=database)
-            )
-            connection.commit()
+            cursor.execute(query)
+
+            if commit:
+                connection.commit()
+
+    def create_database(self, database: str, owner: str) -> None:
+        """
+        creates database with owner
+        """
+
+        template = get_template("templates/create_database.sql")
+        self.execute(template.render(database=database, owner=owner), commit=True)
+
+    def grant_privileges(self, database: str, owner: str) -> None:
+        """
+        grants all privileges on database to owner
+        """
+
+        template = get_template("templates/grant_privileges.sql")
+        self.execute(template.render(database=database, owner=owner), commit=True)
+
+    def create_table(self, table: Table) -> None:
+        """
+        creates table
+        """
+
+        template = get_template("templates/create_table.sql")
+        self.execute(template.render(table=table), commit=True)
 

@@ -1,6 +1,5 @@
-from sqlite3 import Date
-import requests
 import datetime
+import requests
 from bs4 import BeautifulSoup
 
 
@@ -8,6 +7,11 @@ class City:
     def __init__(self, name: str, slug: str) -> None:
         self.name = name
         self.slug = slug
+
+    @staticmethod
+    def migrate(self) -> None:
+        # TODO
+        pass
 
     def serialize(self) -> dict:
         """
