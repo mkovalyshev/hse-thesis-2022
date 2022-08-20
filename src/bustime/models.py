@@ -1,17 +1,68 @@
 import datetime
 import requests
 from bs4 import BeautifulSoup
+from sqlalchemy.orm import declarative_base, registry
+from sqlalchemy import (
+    Table,
+    Float,
+    ForeignKey,
+    Column,
+    Integer,
+    VARCHAR,
+    TIMESTAMP,
+)
+
+Base = declarative_base()
+
+mapper_registry = registry()
+
+cities_table = Table(
+    "cities",
+    mapper_registry.metadata,
+    Column("city_id", Integer, primary_key=True, nullable=False),
+    Column("name", VARCHAR(255), unique=True),
+    Column("slug", VARCHAR(255), unique=True),
+    Column("_updated_at", TIMESTAMP, default=datetime.datetime.now().isoformat()),
+)
+
+routes_table = Table(
+    "routes",
+    mapper_registry.metadata,
+    Column("route_id", Integer, primary_key=True, nullable=False),
+    Column("name", VARCHAR(255)),
+    Column("type", VARCHAR(255)),
+    Column("city_id", Integer, ForeignKey("cities.city_id")),
+    Column("date", TIMESTAMP),
+    Column("_updated_at", TIMESTAMP, default=datetime.datetime.now().isoformat()),
+)
+
+points_table = Table(
+    "points",
+    mapper_registry.metadata,
+    Column("point_id", Integer, primary_key=True, nullable=False),
+    Column("track_id", VARCHAR(255)),
+    Column("route_id", Integer, ForeignKey("routes.route_id")),
+    Column("vehicle_id", VARCHAR(255)),
+    Column("plate_number", VARCHAR(255)),
+    Column("heading", Integer),
+    Column("direction", Integer),
+    Column("speed", Integer),
+    Column("mileage", Integer),
+    Column("lon", Float),
+    Column("lat", Float),
+    Column("timestamp", TIMESTAMP),
+)
 
 
-class City:
-    def __init__(self, name: str, slug: str) -> None:
-        self.name = name
-        self.slug = slug
+class City(Base):
 
-    @staticmethod
-    def migrate(self) -> None:
-        # TODO
-        pass
+    __table__ = cities_table
+
+    def __init__(self, name: str, slug: str, city_id: int = None) -> None:
+
+        self.name = name.strip()
+        self.slug = slug.strip()
+        self.city_id = city_id
 
     def serialize(self) -> dict:
         """
@@ -38,15 +89,35 @@ class City:
         return tuple(cities)
 
 
-class Route:
+class Route(Base):
+
+    __table__ = routes_table
+    __mapper_args__ = {
+        "exclude_properties": ["city_id", "city_name", "city_slug", "city"]
+    }
+
     def __init__(
-        self, route_id: int, name: str, type: str, city: City, date: datetime.date
+        self,
+        route_id: int,
+        name: str,
+        type: str,
+        city_id: int,
+        city_name: str,
+        city_slug: str,
+        date: datetime.date,
     ) -> None:
+
         self.route_id = route_id
         self.name = name
         self.type = type
-        self.city = city
+        self.city_id = city_id
+        self.city_name = city_name
+        self.city_slug = city_slug
         self.date = date
+
+    @property
+    def city(self) -> City:
+        return City(name=self.city_name, slug=self.city_slug)
 
     def serialize(self) -> dict:
         """
@@ -66,7 +137,7 @@ class Route:
         city: City,
         schema: str = "https",
         host: str = "busti.me",
-        date: datetime.date = datetime.date.today(),
+        date: datetime.date = datetime.datetime.today(),
     ) -> tuple[object]:
         """
         returns tuple of Route objects
@@ -78,7 +149,12 @@ class Route:
 
         soup = BeautifulSoup(html, features="html.parser")
 
-        items = soup.find("select", {"name": "bus_id"}).find_all("option")
+        items = soup.find("select", {"name": "bus_id"})
+
+        if items is None:
+            return []
+
+        items = items.find_all("option")
 
         objects = []
 
@@ -91,13 +167,25 @@ class Route:
             type = " ".join(item.text.split(" ")[:-1]).lower()
 
             objects.append(
-                Route(route_id=id_, name=name, type=type, city=city, date=date)
+                Route(
+                    route_id=id_,
+                    name=name,
+                    type=type,
+                    city_id=city.city_id,
+                    city_name=city.name,
+                    city_slug=city.slug,
+                    date=date,
+                )
             )
 
         return tuple(objects)
 
 
-class TelemetryPoint:
+class TelemetryPoint(Base):
+
+    __table__ = points_table
+    __mapper_args__ = {"exclude_properties": ["route"]}
+
     def __init__(
         self,
         track_id: str,
@@ -112,8 +200,9 @@ class TelemetryPoint:
         lat: float,
         timestamp: datetime.datetime,
     ) -> None:
+
         self.track_id = track_id
-        self.route = route
+        self.route_id = route.route_id
         self.vehicle_id = vehicle_id
         self.plate_number = plate_number
         self.heading = heading
@@ -124,24 +213,7 @@ class TelemetryPoint:
         self.lat = lat
         self.timestamp = timestamp
 
-    def serialize(self) -> dict:
-        """
-        returns a serialized object
-        """
-
-        return {
-            "track_id": self.track_id,
-            "route": self.route.serialize(),
-            "vehicle_id": self.vehicle_id,
-            "plate_number": self.plate_number,
-            "heading": self.heading,
-            "direction": self.direction,
-            "speed": self.speed,
-            "mileage": self.mileage,
-            "lon": self.lon,
-            "lat": self.lat,
-            "timestamp": self.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-        }
+        self._route = route
 
     @staticmethod
     def fetch(
@@ -155,7 +227,7 @@ class TelemetryPoint:
         """
 
         data = {
-            "city_slug": route.city.slug,
+            "city_slug": route.city_slug,
             "bus_id": route.route_id,
             "day": date.strftime("%Y-%m-%d"),
         }
@@ -185,3 +257,4 @@ class TelemetryPoint:
             )
 
         return tuple(objects)
+
