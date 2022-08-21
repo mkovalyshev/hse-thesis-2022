@@ -6,7 +6,6 @@ if __name__ == "__main__":
     from models import cities_table, routes_table, points_table
     from models import Base, City, Route, TelemetryPoint
     from functions import (
-        create,
         create_partitioned_table,
         insert_cities,
         insert_routes,
@@ -36,18 +35,21 @@ if __name__ == "__main__":
 
     create_partitioned_table(session, points_table, "timestamp")
 
-    session.execute(
-        """
-    ALTER TABLE points
-        ADD COLUMN "_updated_at"
-            TIMESTAMPTZ;
+    try:
+        session.execute(
+            """
+        ALTER TABLE points
+            ADD COLUMN "_updated_at"
+                TIMESTAMPTZ;
 
-    ALTER TABLE points 
-        ALTER COLUMN "_updated_at" 
-            SET DEFAULT now();
-    """
-    )
-    session.commit()
+        ALTER TABLE points 
+            ALTER COLUMN "_updated_at" 
+                SET DEFAULT now();
+        """
+        )
+        session.commit()
+    except:
+        print("Column exists already, passing...")
 
     insert_cities(session)
 
