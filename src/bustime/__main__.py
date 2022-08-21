@@ -3,8 +3,7 @@ if __name__ == "__main__":
     import os
     import yaml
     import datetime
-    from models import cities_table, routes_table, points_table
-    from models import Base, City, Route, TelemetryPoint
+    from models import cities_table, routes_table, points_table  # TODO: move to migrations
     from functions import (
         create_partitioned_table,
         insert_cities,
@@ -21,6 +20,8 @@ if __name__ == "__main__":
     DATABASE = CONFIG.get("database")
     BUSTIME = CONFIG.get("bustime")
 
+    POINTS_THRESHOLD = 1_000_000
+
     engine = create_engine(
         "postgresql://{user}:{password}@{host}:{port}/{database}".format(**DATABASE)
     )
@@ -30,10 +31,14 @@ if __name__ == "__main__":
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    cities_table.create(engine)
-    routes_table.create(engine)
+    if not cities_table.exists(engine):  # TODO: remove, deprecated
+        cities_table.create(engine)
 
-    create_partitioned_table(session, points_table, "timestamp")
+    if not routes_table.exists(engine):  # TODO: remove, deprecated
+        routes_table.create(engine)
+
+    if not points_table.exists(engine):  # TODO: remove, deprecated
+        create_partitioned_table(session, points_table, "timestamp")
 
     try:
         session.execute(
@@ -61,6 +66,20 @@ if __name__ == "__main__":
     ]
 
     for date in dates:
+
+        points_count = session.execute(
+            f"""
+        select count(*)
+        from points
+        where True
+            and date("timestamp") = date('{date}')
+        """
+        ).fetchone()[0]
+
+        if points_count >= POINTS_THRESHOLD:
+            print("{date} already parsed, skipping...")
+            continue
+
         insert_points(
             session,
             points_table.schema,
