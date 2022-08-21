@@ -56,7 +56,6 @@ points_table = Table(
     Column("lon", Float),
     Column("lat", Float),
     Column("timestamp", TIMESTAMP, primary_key=True, nullable=False),
-    # Column("_updated_at", TIMESTAMP),
 )
 
 
