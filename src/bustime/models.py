@@ -39,9 +39,14 @@ routes_table = Table(
 points_table = Table(
     "points",
     mapper_registry.metadata,
-    Column("point_id", Integer, primary_key=True, nullable=False),
-    Column("track_id", VARCHAR(255)),
-    Column("route_id", Integer, ForeignKey("routes.route_id")),
+    Column("track_id", VARCHAR(255), primary_key=True, nullable=False),
+    Column(
+        "route_id",
+        Integer,
+        ForeignKey("routes.route_id"),
+        primary_key=True,
+        nullable=False,
+    ),
     Column("vehicle_id", VARCHAR(255)),
     Column("plate_number", VARCHAR(255)),
     Column("heading", Integer),
@@ -50,7 +55,8 @@ points_table = Table(
     Column("mileage", Integer),
     Column("lon", Float),
     Column("lat", Float),
-    Column("timestamp", TIMESTAMP),
+    Column("timestamp", TIMESTAMP, primary_key=True, nullable=False),
+    # Column("_updated_at", TIMESTAMP),
 )
 
 
@@ -92,9 +98,7 @@ class City(Base):
 class Route(Base):
 
     __table__ = routes_table
-    __mapper_args__ = {
-        "exclude_properties": ["city_id", "city_name", "city_slug", "city"]
-    }
+    __mapper_args__ = {"exclude_properties": ["city_name", "city_slug", "city"]}
 
     def __init__(
         self,
@@ -184,7 +188,9 @@ class Route(Base):
 class TelemetryPoint(Base):
 
     __table__ = points_table
-    __mapper_args__ = {"exclude_properties": ["route"]}
+    __mapper_args__ = {
+        "exclude_properties": ["route"],
+    }
 
     def __init__(
         self,
