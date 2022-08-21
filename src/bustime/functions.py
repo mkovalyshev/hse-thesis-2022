@@ -43,8 +43,8 @@ def create_partitioned_table(session: object, table: Table, key: str) -> None:
     creates table partitioned by range(key)
     """
 
-    if table.exists(session):
-        table.drop(session)
+    if table.exists(session.get_bind()):
+        table.drop(session.get_bind())
 
     DDL = CreateTable(table).__str__() + f"PARTITION BY RANGE({key})\n;"
 
