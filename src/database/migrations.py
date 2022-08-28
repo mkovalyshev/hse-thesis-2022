@@ -65,7 +65,6 @@ parking_categories_table = Table(
 parking_congestions_table = Table(
     "parking_congestions",
     mapper_registry.metadata,
-    Column("id", Integer, primary_key=True),
     Column("parking_id", Integer, nullable=False),
     Column("total", Integer),
     Column("free", Integer),
@@ -80,7 +79,6 @@ parking_congestions_table = Table(
 parking_prices_table = Table(
     "parking_prices",
     mapper_registry.metadata,
-    Column("id", Integer, primary_key=True),
     Column("parking_id", Integer, nullable=False),
     Column("vehicle_type", VARCHAR(255)),
     Column("min", Integer),
