@@ -70,7 +70,7 @@ parking_congestions_table = Table(
     Column("free", Integer),
     Column("updated_at", BIGINT),
     Column(
-        "city_id", Integer, ForeignKey("cities.city_id"), primary_key=True, unique=False
+        "city_id", Integer, ForeignKey("cities.city_id"), unique=False
     ),
     Column("_updated_at", TIMESTAMP, default=datetime.datetime.now().isoformat()),
 )
@@ -84,7 +84,7 @@ parking_prices_table = Table(
     Column("min", Integer),
     Column("max", Integer),
     Column(
-        "city_id", Integer, ForeignKey("cities.city_id"), primary_key=True, unique=False
+        "city_id", Integer, ForeignKey("cities.city_id"), unique=False
     ),
     Column("_updated_at", TIMESTAMP, default=datetime.datetime.now().isoformat()),
 )
