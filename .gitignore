@@ -4,3 +4,6 @@ src/bustime/dev.ipynb
 .gitignore
 **/__pycache__/**
 **/dev.ipynb
+.DS_Store
+**/dev/**
+.vscode/settings.json

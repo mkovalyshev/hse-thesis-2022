@@ -1,11 +1,10 @@
 if __name__ == "__main__":
 
     import os
+    import sys
     import yaml
     import datetime
-    from models import cities_table, routes_table, points_table  # TODO: move to migrations
     from functions import (
-        create_partitioned_table,
         insert_cities,
         insert_routes,
         insert_points,
@@ -13,6 +12,13 @@ if __name__ == "__main__":
     from sqlalchemy import create_engine
     from sqlalchemy.orm import Session, sessionmaker
     from sqlalchemy.schema import CreateTable
+
+    sys.path.append(
+        os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    )
+
+    from database.migrations import cities_table, routes_table, points_table
+    from database.functions import create_partition
 
     with open(os.path.join(os.path.dirname(__file__), "..", "config.yaml"), "r") as f:
         CONFIG = yaml.load(f, yaml.FullLoader)
@@ -30,15 +36,6 @@ if __name__ == "__main__":
 
     Session = sessionmaker(bind=engine)
     session = Session()
-
-    if not cities_table.exists(engine):  # TODO: remove, deprecated
-        cities_table.create(engine)
-
-    if not routes_table.exists(engine):  # TODO: remove, deprecated
-        routes_table.create(engine)
-
-    if not points_table.exists(engine):  # TODO: remove, deprecated
-        create_partitioned_table(session, points_table, "timestamp")
 
     try:
         session.execute(
@@ -80,6 +77,8 @@ if __name__ == "__main__":
             print("{date} already parsed, skipping...")
             continue
 
+        create_partition(session, points_table.schema, points_table.name, date)
+
         insert_points(
             session,
             points_table.schema,
@@ -87,4 +86,3 @@ if __name__ == "__main__":
             BUSTIME.get("route").get("include"),
             date,
         )
-

@@ -1,63 +1,18 @@
 import datetime
 import requests
 from bs4 import BeautifulSoup
-from sqlalchemy.orm import declarative_base, registry
-from sqlalchemy import (
-    Table,
-    Float,
-    ForeignKey,
-    Column,
-    Integer,
-    VARCHAR,
-    TIMESTAMP,
+from sqlalchemy.orm import declarative_base
+import sys
+import os
+
+sys.path.append(
+    os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
+
+from database.migrations import cities_table, routes_table, points_table
+
 
 Base = declarative_base()
-
-mapper_registry = registry()
-
-cities_table = Table(
-    "cities",
-    mapper_registry.metadata,
-    Column("city_id", Integer, primary_key=True, nullable=False),
-    Column("name", VARCHAR(255), unique=True),
-    Column("slug", VARCHAR(255), unique=True),
-    Column("_updated_at", TIMESTAMP, default=datetime.datetime.now().isoformat()),
-)
-
-routes_table = Table(
-    "routes",
-    mapper_registry.metadata,
-    Column("route_id", Integer, primary_key=True, nullable=False),
-    Column("name", VARCHAR(255)),
-    Column("type", VARCHAR(255)),
-    Column("city_id", Integer, ForeignKey("cities.city_id")),
-    Column("date", TIMESTAMP),
-    Column("_updated_at", TIMESTAMP, default=datetime.datetime.now().isoformat()),
-)
-
-points_table = Table(
-    "points",
-    mapper_registry.metadata,
-    Column("track_id", VARCHAR(255), primary_key=True, nullable=False),
-    Column(
-        "route_id",
-        Integer,
-        ForeignKey("routes.route_id"),
-        primary_key=True,
-        nullable=False,
-    ),
-    Column("vehicle_id", VARCHAR(255)),
-    Column("plate_number", VARCHAR(255)),
-    Column("heading", Integer),
-    Column("direction", Integer),
-    Column("speed", Integer),
-    Column("mileage", Integer),
-    Column("lon", Float),
-    Column("lat", Float),
-    Column("timestamp", TIMESTAMP, primary_key=True, nullable=False),
-)
-
 
 class City(Base):
 
@@ -196,11 +151,7 @@ class TelemetryPoint(Base):
         track_id: str,
         route: Route,
         vehicle_id: str,
-        plate_number: str,
-        heading: int,
-        direction: int,
         speed: int,
-        mileage: int,
         lon: float,
         lat: float,
         timestamp: datetime.datetime,
@@ -209,11 +160,7 @@ class TelemetryPoint(Base):
         self.track_id = track_id
         self.route_id = route.route_id
         self.vehicle_id = vehicle_id
-        self.plate_number = plate_number
-        self.heading = heading
-        self.direction = direction
         self.speed = speed
-        self.mileage = mileage
         self.lon = lon
         self.lat = lat
         self.timestamp = timestamp
@@ -247,11 +194,7 @@ class TelemetryPoint(Base):
                     track_id=item["uniqueid"],
                     route=route,
                     vehicle_id=item["bortnum"],
-                    plate_number=item["gosnum"],
-                    heading=item["heading"],
-                    direction=item["direction"],
                     speed=item["speed"],
-                    mileage=item["probeg"],
                     lon=item["lon"],
                     lat=item["lat"],
                     timestamp=datetime.datetime.strptime(
