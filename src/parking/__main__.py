@@ -46,10 +46,16 @@ if __name__ == "__main__":
             PARKING.get("api", {}).get(city[1], {}).get("ver"),
         )
 
-        for category in ParkingCategory.fetchall(client):
-            create(session, category, autocommit=True)
+        try:
+            for category in ParkingCategory.fetchall(client):
+                create(session, category, autocommit=True)
+        except:
+            print("Fail")
 
-        parkings = Parking.fetch(client)
+        try:
+            parkings = Parking.fetch(client)
+        except:
+            print("Fail")
 
         for parking in parkings:
             create(session, parking, autocommit=True)
