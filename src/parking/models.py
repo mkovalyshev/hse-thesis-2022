@@ -1,5 +1,6 @@
 import sys
 import os
+from wsgiref.headers import Headers
 
 sys.path.append(
     os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,6 +20,14 @@ from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 
 
+HEADERS = {
+    "Accept": "application/json",
+    "Referer": "https://parkingkzn.ru/ru/",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko)"
+    "Chrome/104.0.0.0 Safari/537.36",
+}
+
+
 class Client:
     def __init__(self, city_id: int, host: str, version: str):
         self.city_id = city_id
@@ -26,9 +35,14 @@ class Client:
         self.version = version
 
     def get_categories(self) -> dict:
-        response = requests.get(f"https://{self.host}.ru/api/{self.version}/categories")
+        response = requests.get(
+            f"https://{self.host}.ru/api/{self.version}/categories", headers=HEADERS
+        )
 
-        return response.json()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {}
 
     def get_parkings(self) -> dict:
 
@@ -37,10 +51,15 @@ class Client:
         }
 
         response = requests.get(
-            f"https://{self.host}.ru/api/{self.version}/parkings", params=params
+            f"https://{self.host}.ru/api/{self.version}/parkings",
+            params=params,
+            headers=HEADERS,
         )
 
-        return response.json()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {}
 
 
 class ParkingCategory(Base):
