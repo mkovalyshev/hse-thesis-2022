@@ -70,6 +70,7 @@ parking_congestions_table = Table(
     Column("total", Integer),
     Column("free", Integer),
     Column("updated_at", BIGINT),
+    Column("city_id", Integer, ForeignKey("cities.city_id"), primary_key=True, unique=False),
     Column("_updated_at", TIMESTAMP, default=datetime.datetime.now().isoformat()),
 )
 
@@ -82,17 +83,18 @@ parking_prices_table = Table(
     Column("vehicle_type", VARCHAR(255)),
     Column("min", Integer),
     Column("max", Integer),
+    Column("city_id", Integer, ForeignKey("cities.city_id"), primary_key=True, unique=False),
     Column("_updated_at", TIMESTAMP, default=datetime.datetime.now().isoformat()),
 )
 
 parkings_table = Table(
     "parkings",
     mapper_registry.metadata,
-    Column("parking_id", Integer, primary_key=True, unique=True),
+    Column("parking_id", Integer, primary_key=True, unique=False),
     Column("location", VARCHAR(255)),
     Column("spaces_total", Integer),
     Column("spaces_handicapped", Integer),
     Column("category_id", Integer, ForeignKey("parking_categories.category_id")),
-    Column("city_id", Integer, ForeignKey("cities.city_id"), primary_key=True),
+    Column("city_id", Integer, ForeignKey("cities.city_id"), primary_key=True, unique=False),
     Column("_updated_at", TIMESTAMP, default=datetime.datetime.now().isoformat())
 )

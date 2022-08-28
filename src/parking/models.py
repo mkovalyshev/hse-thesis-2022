@@ -110,11 +110,14 @@ class ParkingCongestion(Base):
 
     __table__ = parking_congestions_table
 
-    def __init__(self, parking_id: int, total: int, free: int, updated_at: int):
+    def __init__(
+        self, parking_id: int, total: int, free: int, updated_at: int, city_id: int
+    ):
         self.parking_id = parking_id
         self.total = total
         self.free = free
         self.updated_at = updated_at
+        self.city_id = city_id
 
     def serialize(self) -> dict:
         return self.__dict__
@@ -124,11 +127,14 @@ class ParkingPrice(Base):
 
     __table__ = parking_prices_table
 
-    def __init__(self, parking_id: int, vehicle_type: str, min: int, max: int):
+    def __init__(
+        self, parking_id: int, vehicle_type: str, min: int, max: int, city_id: int
+    ):
         self.parking_id = parking_id
         self.vehicle_type = vehicle_type
         self.min = min
         self.max = max
+        self.city_id = city_id
 
     def serialize(self) -> dict:
         return self.__dict__
@@ -183,12 +189,17 @@ class Parking(Base):
             self.congestion_total,
             self.congestion_free,
             self.congestion_updated_at,
+            self.city_id,
         )
 
     @property
     def price(self) -> ParkingPrice:
         return ParkingPrice(
-            self.parking_id, self.price_vehicle_type, self.price_min, self.price_max
+            self.parking_id,
+            self.price_vehicle_type,
+            self.price_min,
+            self.price_max,
+            self.city_id,
         )
 
     @staticmethod
