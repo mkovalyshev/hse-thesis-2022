@@ -37,6 +37,12 @@ if __name__ == "__main__":
     Session = sessionmaker(bind=engine)
     session = Session()
 
+    for relation in relations:
+        try:
+            relation.create(session)
+        except Exception as e:  # TODO: fix
+            print(e)
+
     try:
         session.execute(
             """
